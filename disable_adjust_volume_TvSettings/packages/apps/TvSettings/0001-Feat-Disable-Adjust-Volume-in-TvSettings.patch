@@ -1,0 +1,125 @@
+From 6fdbd410020ea8187ce1903ff3af0e3f0a1c9e25 Mon Sep 17 00:00:00 2001
+From: wengtao <tao.weng@rock-chips.com>
+Date: Wed, 18 Sep 2019 16:20:24 +0800
+Subject: [PATCH] Feat: Disable Adjust Volume in TvSettings.
+
+Disable Adjust Volume.
+Volume can be adjusted through by adjust HDMI volume.
+relate to: Ie06ce25e7f525db5b6de43a49b63bf632b7900fe
+
+Change-Id: I7e98fd5dcc936d5a7300d445af0701868379c906
+Signed-off-by: wengtao <tao.weng@rock-chips.com>
+---
+ .../com/android/server/audio/AudioService.java     | 42 ++++++++++++++++++++++
+ 1 file changed, 42 insertions(+)
+
+diff --git a/services/core/java/com/android/server/audio/AudioService.java b/services/core/java/com/android/server/audio/AudioService.java
+index 4d8041c..73e2fbf 100755
+--- a/services/core/java/com/android/server/audio/AudioService.java
++++ b/services/core/java/com/android/server/audio/AudioService.java
+@@ -1534,6 +1534,9 @@ public class AudioService extends IAudioService.Stub
+     /** @see AudioManager#adjustVolume(int, int) */
+     public void adjustSuggestedStreamVolume(int direction, int suggestedStreamType, int flags,
+             String callingPackage, String caller) {
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         final IAudioPolicyCallback extVolCtlr;
+         synchronized (mExtVolumeControllerLock) {
+             extVolCtlr = mExtVolumeController;
+@@ -1554,6 +1557,9 @@ public class AudioService extends IAudioService.Stub
+                 + ", flags=" + flags + ", caller=" + caller
+                 + ", volControlStream=" + mVolumeControlStream
+                 + ", userSelect=" + mUserSelectedVolumeControlStream);
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         mVolumeLogger.log(new VolumeEvent(VolumeEvent.VOL_ADJUST_SUGG_VOL, suggestedStreamType,
+                 direction/*val1*/, flags/*val2*/, new StringBuilder(callingPackage)
+                         .append("/").append(caller).append(" uid:").append(uid).toString()));
+@@ -1605,6 +1611,9 @@ public class AudioService extends IAudioService.Stub
+     /** @see AudioManager#adjustStreamVolume(int, int, int) */
+     public void adjustStreamVolume(int streamType, int direction, int flags,
+             String callingPackage) {
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         if ((streamType == AudioManager.STREAM_ACCESSIBILITY) && !canChangeAccessibilityVolume()) {
+             Log.w(TAG, "Trying to call adjustStreamVolume() for a11y without"
+                     + "CHANGE_ACCESSIBILITY_VOLUME / callingPackage=" + callingPackage);
+@@ -1618,6 +1627,9 @@ public class AudioService extends IAudioService.Stub
+ 
+     protected void adjustStreamVolume(int streamType, int direction, int flags,
+             String callingPackage, String caller, int uid) {
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         if (mUseFixedVolume) {
+             return;
+         }
+@@ -1842,6 +1854,9 @@ public class AudioService extends IAudioService.Stub
+     }
+ 
+     private void setSystemAudioVolume(int oldVolume, int newVolume, int maxVolume, int flags) {
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         if (mHdmiManager == null
+                 || mHdmiTvClient == null
+                 || oldVolume == newVolume
+@@ -1948,6 +1963,9 @@ public class AudioService extends IAudioService.Stub
+ 
+     /** @see AudioManager#setStreamVolume(int, int, int) */
+     public void setStreamVolume(int streamType, int index, int flags, String callingPackage) {
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         if ((streamType == AudioManager.STREAM_ACCESSIBILITY) && !canChangeAccessibilityVolume()) {
+             Log.w(TAG, "Trying to call setStreamVolume() for a11y without"
+                     + " CHANGE_ACCESSIBILITY_VOLUME  callingPackage=" + callingPackage);
+@@ -1992,6 +2010,9 @@ public class AudioService extends IAudioService.Stub
+             Log.d(TAG, "setStreamVolume(stream=" + streamType+", index=" + index
+                     + ", calling=" + callingPackage + ")");
+         }
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         if (mUseFixedVolume) {
+             return;
+         }
+@@ -2625,6 +2646,9 @@ public class AudioService extends IAudioService.Stub
+     }
+ 
+     private void setRingerMode(int ringerMode, String caller, boolean external) {
++        if(isBoxDevice() && isDisableVolume()) {
++            return;
++        }
+         if (mUseFixedVolume || mIsSingleVolume) {
+             return;
+         }
+@@ -8264,4 +8288,22 @@ public class AudioService extends IAudioService.Stub
+             new HashMap<IBinder, AudioPolicyProxy>();
+     @GuardedBy("mAudioPolicies")
+     private int mAudioPolicyCounter = 0;
++
++    //获取当前设备是否为Box设备
++    private boolean isBoxDevice() {
++        String product = SystemProperties.get("ro.target.product", "");
++        if(product != null && product.equals("box")) {
++            return true;
++        }
++        return false;
++    }
++
++    //判断当前是否禁用音量
++    private boolean isDisableVolume() {
++        String isDisabled = SystemProperties.get("persist.sys.audio.disable", "false");
++        if(isDisabled != null && isDisabled.equals("true")) {
++            return true;
++        }
++        return false;
++    }
+ }
+-- 
+2.7.4
+

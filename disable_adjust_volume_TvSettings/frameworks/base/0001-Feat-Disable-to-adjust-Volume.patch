@@ -1,0 +1,110 @@
+From e60df5a4523e370693621000d76780ab521f78de Mon Sep 17 00:00:00 2001
+From: wengtao <tao.weng@rock-chips.com>
+Date: Wed, 18 Sep 2019 15:44:05 +0800
+Subject: [PATCH] Feat: Disable to adjust Volume
+
+Disable to adjust Volume.
+Volume can be adjusted through by adjust HDMI volume.
+
+relate to: I7e98fd5dcc936d5a7300d445af0701868379c906
+
+Change-Id: Ie06ce25e7f525db5b6de43a49b63bf632b7900fe
+Signed-off-by: wengtao <tao.weng@rock-chips.com>
+---
+ Settings/res/values-zh-rCN/strings.xml                   |  1 +
+ Settings/res/values/strings.xml                          |  1 +
+ Settings/res/xml/sound.xml                               |  5 +++++
+ .../android/tv/settings/device/sound/SoundFragment.java  | 16 ++++++++++++++++
+ 4 files changed, 23 insertions(+)
+
+diff --git a/Settings/res/values-zh-rCN/strings.xml b/Settings/res/values-zh-rCN/strings.xml
+index 4d858cb..9624914 100644
+--- a/Settings/res/values-zh-rCN/strings.xml
++++ b/Settings/res/values-zh-rCN/strings.xml
+@@ -85,6 +85,7 @@
+     <string name="device_surround_sound" msgid="6272196310566546860">"环绕声"</string>
+     <string name="device_sound_effects" msgid="7793281745920228622">"系统声音"</string>
+     <string name="device_sound_bootsafe">开机音量保护</string>
++    <string name="device_sound_disable_volume">禁止调节音量</string>
+     <string name="device_bit_stream">解码方式</string>
+     <string name="device_apps" msgid="1971794537385509294">"应用"</string>
+     <string name="device_storage" msgid="5536683600091277826">"存储空间"</string>
+diff --git a/Settings/res/values/strings.xml b/Settings/res/values/strings.xml
+index 9643725..6b1cc27 100644
+--- a/Settings/res/values/strings.xml
++++ b/Settings/res/values/strings.xml
+@@ -171,6 +171,7 @@
+     <!-- Preference and title which changes system sounds settings. [CHAR LIMIT=50] -->
+     <string name="device_sound_effects">System sounds</string>
+     <string name="device_sound_bootsafe">Enforce safe volume</string>
++    <string name="device_sound_disable_volume">Disable to adjust volume</string>
+     <string name="device_bit_stream">BitStream</string>
+     <string name="hdmi">HDMI</string>
+     <!-- Preference which manages apps. [CHAR LIMIT=50] -->
+diff --git a/Settings/res/xml/sound.xml b/Settings/res/xml/sound.xml
+index ca9be4b..c647374 100644
+--- a/Settings/res/xml/sound.xml
++++ b/Settings/res/xml/sound.xml
+@@ -28,6 +28,11 @@
+         android:persistent="true"
+         android:title="@string/device_sound_bootsafe"/>
+ 
++    <SwitchPreference
++        android:key="sound_disable_volume"
++        android:persistent="true"
++        android:title="@string/device_sound_disable_volume"/>
++
+     <ListPreference
+         android:key="audio_mode"
+         android:title="@string/audio_mode"
+diff --git a/Settings/src/com/android/tv/settings/device/sound/SoundFragment.java b/Settings/src/com/android/tv/settings/device/sound/SoundFragment.java
+index b1f3586..cd68636 100644
+--- a/Settings/src/com/android/tv/settings/device/sound/SoundFragment.java
++++ b/Settings/src/com/android/tv/settings/device/sound/SoundFragment.java
+@@ -53,6 +53,8 @@ public class SoundFragment extends PreferenceControllerFragment implements Prefe
+     static final String KEY_SURROUND_SOUND_CATEGORY = "surround_sound_category";
+     static final String KEY_SURROUND_SOUND_FORMAT_PREFIX = "surround_sound_format_";
+     static final String KEY_AUDIO_MODE_PROPERTY = "persist.dolby.rfmode";
++    static final String KEY_SOUND_DISALBE_VOLUME = "sound_disable_volume";
++    static final String PROP_DISABLE_VOLUME = "persist.sys.audio.disable";
+ 
+     private static final String KEY_AUDIO_MODE = "audio_mode";
+ 
+@@ -70,6 +72,7 @@ public class SoundFragment extends PreferenceControllerFragment implements Prefe
+     private PreferenceCategory mSurroundSoundCategoryPref;
+ 
+     private ListPreference audiomodePref;
++    private TwoStatePreference disableVolumePref;
+ 
+     public static SoundFragment newInstance() {
+         return new SoundFragment();
+@@ -122,6 +125,14 @@ public class SoundFragment extends PreferenceControllerFragment implements Prefe
+ 
+         getPreferenceScreen().removePreference(audiomodePref);
+ 
++        String isDisable = SystemProperties.get(PROP_DISABLE_VOLUME, "false");
++        disableVolumePref = (TwoStatePreference) findPreference(KEY_SOUND_DISALBE_VOLUME);
++
++        if(isDisable != null && isDisable.equals("true")) {
++            disableVolumePref.setChecked(true);
++        } else {
++            disableVolumePref.setChecked(false);
++        }
+     }
+ 
+     @Override
+@@ -193,6 +204,11 @@ public class SoundFragment extends PreferenceControllerFragment implements Prefe
+             final TwoStatePreference soundSafe = (TwoStatePreference) preference;
+             setSoundBootSafeEnabled(soundSafe.isChecked());
+         }
++        if (TextUtils.equals(preference.getKey(), KEY_SOUND_DISALBE_VOLUME)) {
++            boolean isDisable = ((SwitchPreference)preference).isChecked();
++            SystemProperties.set(PROP_DISABLE_VOLUME, String.valueOf(isDisable));
++            setSoundBootSafeEnabled(!isDisable);
++        }
+         return super.onPreferenceTreeClick(preference);
+     }
+ 
+-- 
+2.7.4
+
