@@ -1,0 +1,117 @@
+From d5dcb5661af672037375630e8bb58c5eadc4ba96 Mon Sep 17 00:00:00 2001
+From: wengtao <tao.weng@rock-chips.com>
+Date: Wed, 18 Sep 2019 16:17:17 +0800
+Subject: [PATCH 2/2] Feat: Add go to MaskROM
+
+Change-Id: I57e450dcd2107b7c73ae5f83eaa0e52ebebce71f
+Signed-off-by: wengtao <tao.weng@rock-chips.com>
+---
+ Settings/res/values-zh-rCN/strings.xml                  |  3 +++
+ Settings/res/values/strings.xml                         |  3 +++
+ Settings/res/xml/development_prefs.xml                  |  6 +++++-
+ .../system/development/DevelopmentFragment.java         | 17 +++++++++++++++++
+ 4 files changed, 28 insertions(+), 1 deletion(-)
+
+diff --git a/Settings/res/values-zh-rCN/strings.xml b/Settings/res/values-zh-rCN/strings.xml
+index cb72383..8285a8e 100644
+--- a/Settings/res/values-zh-rCN/strings.xml
++++ b/Settings/res/values-zh-rCN/strings.xml
+@@ -1078,4 +1078,7 @@
+     <string name="reboot">重启</string>
+    <!--performance -->
+     <string name="performance_float">性能浮窗</string>
++
++    <!-- 进入maskrom -->
++    <string name="go_to_maskrom">进入MaskROM</string>
+ </resources>
+diff --git a/Settings/res/values/strings.xml b/Settings/res/values/strings.xml
+index a6a5c8a..5a014c6 100644
+--- a/Settings/res/values/strings.xml
++++ b/Settings/res/values/strings.xml
+@@ -2132,4 +2132,7 @@
+     <string name="network_speed">net speed:</string>
+     <string name="network_mac">wifi mac:</string>
+     <string name="network_mac2">ethernet mac:</string>
++
++    <!--Go To MaskROM -->
++    <string name="go_to_maskrom">Go to MaskROM</string>
+ </resources>
+diff --git a/Settings/res/xml/development_prefs.xml b/Settings/res/xml/development_prefs.xml
+index 9d0c033..79dca30 100644
+--- a/Settings/res/xml/development_prefs.xml
++++ b/Settings/res/xml/development_prefs.xml
+@@ -151,6 +151,10 @@
+             android:entries="@array/select_logpersist_titles"
+             android:entryValues="@array/select_logpersist_values" />
+ 
++        <Preference
++            android:key="go_to_maskrom"
++            android:title="@string/go_to_maskrom"/>
++
+     </PreferenceCategory>
+ 
+     <PreferenceCategory android:key="debug_networking_category"
+@@ -371,4 +375,4 @@
+             android:summary="@string/force_resizable_activities_summary"/>
+     </PreferenceCategory>
+ 
+-</PreferenceScreen>
+\ No newline at end of file
++</PreferenceScreen>
+diff --git a/Settings/src/com/android/tv/settings/system/development/DevelopmentFragment.java b/Settings/src/com/android/tv/settings/system/development/DevelopmentFragment.java
+index 688ee8b..c1af09a 100644
+--- a/Settings/src/com/android/tv/settings/system/development/DevelopmentFragment.java
++++ b/Settings/src/com/android/tv/settings/system/development/DevelopmentFragment.java
+@@ -164,6 +164,9 @@ public class DevelopmentFragment extends SettingsPreferenceFragment
+     private static final String PERSIST_RK_ADB_ENABLE = "persist.sys.adb_enable";
+     private static String DEFAULT_LOG_RING_BUFFER_SIZE_IN_BYTES = "262144"; // 256K
+ 
++    //Go to MaskROM
++    private static final String KEY_GO_TO_MASKROM = "go_to_maskrom";
++
+     private static final int[] MOCK_LOCATION_APP_OPS = new int[] {AppOpsManager.OP_MOCK_LOCATION};
+ 
+     private static final String STATE_SHOWING_DIALOG_KEY = "showing_dialog_key";
+@@ -254,6 +257,8 @@ public class DevelopmentFragment extends SettingsPreferenceFragment
+ 
+     private UsbModeSettings mUsbModeSetting = null;
+ 
++    private Preference goToMaskROM;
++
+     public static DevelopmentFragment newInstance() {
+         return new DevelopmentFragment();
+     }
+@@ -462,6 +467,8 @@ public class DevelopmentFragment extends SettingsPreferenceFragment
+             removePreference(KEY_COLOR_MODE);
+             mColorModePreference = null;
+         }
++
++        goToMaskROM = (Preference) findPreference(KEY_GO_TO_MASKROM);
+     }
+ 
+     private void removePreference(String key) {
+@@ -1619,6 +1626,8 @@ public class DevelopmentFragment extends SettingsPreferenceFragment
+             writeUSBAudioOptions();
+         } else if (preference == mForceResizable) {
+             writeForceResizableOptions();
++        } else if (preference == goToMaskROM) {
++           goToMaskROM(); 
+         } else {
+             return super.onPreferenceTreeClick(preference);
+         }
+@@ -1745,4 +1754,12 @@ public class DevelopmentFragment extends SettingsPreferenceFragment
+             Log.e(TAG, "Fail to set oem unlock.", e);
+         }
+     }
++
++    private void goToMaskROM() {
++        try{
++            java.lang.Runtime.getRuntime().exec("reboot maskrom");
++        } catch (Exception e) {
++            e.printStackTrace();
++        }
++    }
+ }
+-- 
+2.7.4
+
