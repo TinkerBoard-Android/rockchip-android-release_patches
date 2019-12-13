@@ -1,0 +1,25 @@
+From 4048ffded9f97504499f452e54e2959e09816b3a Mon Sep 17 00:00:00 2001
+From: Weixin Zhou <zwx@rock-chips.com>
+Date: Tue, 10 Dec 2019 08:52:55 +0800
+Subject: [PATCH] system:core:init: set selinux to permissive for user
+
+---
+ init/Android.bp | 2 +-
+ 1 file changed, 1 insertion(+), 1 deletion(-)
+
+diff --git a/init/Android.bp b/init/Android.bp
+index 63c8382..a6ac830 100644
+--- a/init/Android.bp
++++ b/init/Android.bp
+@@ -27,7 +27,7 @@ cc_defaults {
+         "-Wno-unused-parameter",
+         "-Werror",
+         "-DALLOW_LOCAL_PROP_OVERRIDE=0",
+-        "-DALLOW_PERMISSIVE_SELINUX=0",
++        "-DALLOW_PERMISSIVE_SELINUX=1",
+         "-DREBOOT_BOOTLOADER_ON_PANIC=0",
+         "-DWORLD_WRITABLE_KMSG=0",
+         "-DDUMP_ON_UMOUNT_FAILURE=0",
+-- 
+2.7.4
+
